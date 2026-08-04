@@ -31,6 +31,7 @@ model User {
 
   tasks         Task[]
   focusSessions FocusSession[]
+  dailyReports  DailyReport[]
 
   @@map("users")
 }
