@@ -11,17 +11,16 @@ export async function GET(request: Request) {
   try {
     const { prisma } = await import("@/lib/prisma");
 
-    // Удаляем все таблицы
-    await prisma.$executeRawUnsafe(`DROP TABLE IF EXISTS daily_reports CASCADE`);
-    await prisma.$executeRawUnsafe(`DROP TABLE IF EXISTS focus_sessions CASCADE`);
-    await prisma.$executeRawUnsafe(`DROP TABLE IF EXISTS subtasks CASCADE`);
-    await prisma.$executeRawUnsafe(`DROP TABLE IF EXISTS tasks CASCADE`);
-    await prisma.$executeRawUnsafe(`DROP TABLE IF EXISTS users CASCADE`);
-
-    // Создаём таблицы заново с camelCase столбцами
+    // Всё в одном запросе
     await prisma.$executeRawUnsafe(`
+      DROP TABLE IF EXISTS daily_reports CASCADE;
+      DROP TABLE IF EXISTS focus_sessions CASCADE;
+      DROP TABLE IF EXISTS subtasks CASCADE;
+      DROP TABLE IF EXISTS tasks CASCADE;
+      DROP TABLE IF EXISTS users CASCADE;
+      
       CREATE TABLE users (
-        id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+        id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
         email TEXT UNIQUE NOT NULL,
         name TEXT NOT NULL,
         password TEXT NOT NULL,
@@ -29,12 +28,10 @@ export async function GET(request: Request) {
         avatar TEXT,
         createdAt TIMESTAMP DEFAULT NOW(),
         updatedAt TIMESTAMP DEFAULT NOW()
-      )
-    `);
-
-    await prisma.$executeRawUnsafe(`
+      );
+      
       CREATE TABLE tasks (
-        id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+        id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
         title TEXT NOT NULL,
         description TEXT DEFAULT '',
         priority TEXT DEFAULT 'MEDIUM',
@@ -46,35 +43,29 @@ export async function GET(request: Request) {
         createdAt TIMESTAMP DEFAULT NOW(),
         updatedAt TIMESTAMP DEFAULT NOW(),
         completedAt TIMESTAMP
-      )
-    `);
-
-    await prisma.$executeRawUnsafe(`
+      );
+      
       CREATE TABLE subtasks (
-        id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+        id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
         title TEXT NOT NULL,
         completed BOOLEAN DEFAULT FALSE,
         taskId TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
         createdAt TIMESTAMP DEFAULT NOW(),
         updatedAt TIMESTAMP DEFAULT NOW()
-      )
-    `);
-
-    await prisma.$executeRawUnsafe(`
+      );
+      
       CREATE TABLE focus_sessions (
-        id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+        id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
         duration INTEGER NOT NULL,
         completed BOOLEAN DEFAULT FALSE,
         taskId TEXT REFERENCES tasks(id) ON DELETE SET NULL,
         userId TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         startedAt TIMESTAMP DEFAULT NOW(),
         createdAt TIMESTAMP DEFAULT NOW()
-      )
-    `);
-
-    await prisma.$executeRawUnsafe(`
+      );
+      
       CREATE TABLE daily_reports (
-        id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+        id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
         userId TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         date DATE NOT NULL,
         tasksCreated INTEGER DEFAULT 0,
@@ -82,25 +73,25 @@ export async function GET(request: Request) {
         focusMinutes INTEGER DEFAULT 0,
         createdAt TIMESTAMP DEFAULT NOW(),
         UNIQUE(userId, date)
-      )
+      );
+      
+      CREATE INDEX idx_tus ON tasks(userId, status);
+      CREATE INDEX idx_tud ON tasks(userId, dueDate);
+      CREATE INDEX idx_tup ON tasks(userId, priority);
+      CREATE INDEX idx_fsu ON focus_sessions(userId, createdAt);
+      CREATE INDEX idx_dru ON daily_reports(userId, date);
     `);
 
-    await prisma.$executeRawUnsafe(`CREATE INDEX idx_tasks_user_status ON tasks(userId, status)`);
-    await prisma.$executeRawUnsafe(`CREATE INDEX idx_tasks_user_dueDate ON tasks(userId, dueDate)`);
-    await prisma.$executeRawUnsafe(`CREATE INDEX idx_tasks_user_priority ON tasks(userId, priority)`);
-    await prisma.$executeRawUnsafe(`CREATE INDEX idx_focus_sessions_user ON focus_sessions(userId, createdAt)`);
-    await prisma.$executeRawUnsafe(`CREATE INDEX idx_daily_reports_user ON daily_reports(userId, date)`);
-
-    console.log("[DB INIT] All tables recreated successfully");
+    console.log("[DB INIT] ALL DONE");
 
     return NextResponse.json({ 
       success: true, 
-      message: "Database initialized successfully. All tables recreated with correct column names." 
+      message: "Database initialized successfully." 
     });
   } catch (error) {
-    console.error("[DB INIT] Error:", error);
+    console.error("[DB INIT] FATAL ERROR:", error);
     return NextResponse.json({ 
-      error: "Failed to initialize database",
+      error: "Failed",
       details: error instanceof Error ? error.message : String(error)
     }, { status: 500 });
   }
