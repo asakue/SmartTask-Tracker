@@ -1,13 +1,10 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { prisma } from "@/lib/prisma";
 
-// Флаг для предотвращения многократного создания таблиц
-let tablesCreated = false;
+// Флаг для предотвращения многократного создания таблиц в одной сессии
+let initialized = false;
 
-async function ensureTables() {
-  if (tablesCreated) return;
-  
-  const { prisma } = await import("@/lib/prisma");
+export async function ensureDatabaseInitialized() {
+  if (initialized) return;
   
   try {
     // Создаём таблицы один раз
@@ -77,23 +74,11 @@ async function ensureTables() {
       )
     `);
 
-    tablesCreated = true;
-    console.log("[INIT] Tables created successfully");
+    initialized = true;
+    console.log("[DB INIT] Tables created successfully");
   } catch (error) {
-    console.error("[INIT] Error creating tables:", error);
+    console.error("[DB INIT] Error creating tables:", error);
     // Если таблицы уже существуют, просто продолжаем работу
-    tablesCreated = true;
+    initialized = true;
   }
 }
-
-export async function middleware(request: NextRequest) {
-  // Запускаем создание таблиц для API маршрутов
-  if (request.nextUrl.pathname.startsWith("/api/")) {
-    await ensureTables();
-  }
-  return NextResponse.next();
-}
-
-export const config = {
-  matcher: "/api/:path*",
-};
