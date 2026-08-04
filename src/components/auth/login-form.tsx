@@ -4,6 +4,7 @@ import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface LoginFormProps {
   className?: string;
@@ -30,13 +31,20 @@ export default function LoginForm({ className }: LoginFormProps) {
           return;
         }
         await register({ email, password, name });
+        toast.success("Аккаунт создан! Добро пожаловать!");
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 500);
       } else {
         await login({ email, password });
+        toast.success("Вы вошли в систему!");
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 500);
       }
-      router.push("/dashboard");
-      router.refresh();
     } catch (err: any) {
       setError(err.message || "Произошла ошибка");
+      toast.error(err.message || "Произошла ошибка");
     }
   };
 
