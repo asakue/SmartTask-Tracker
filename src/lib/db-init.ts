@@ -16,8 +16,8 @@ export async function ensureDatabaseInitialized() {
         password TEXT NOT NULL,
         role TEXT DEFAULT 'USER',
         avatar TEXT,
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
+        createdAt TIMESTAMP DEFAULT NOW(),
+        updatedAt TIMESTAMP DEFAULT NOW()
       )
     `);
 
@@ -28,13 +28,13 @@ export async function ensureDatabaseInitialized() {
         description TEXT DEFAULT '',
         priority TEXT DEFAULT 'MEDIUM',
         status TEXT DEFAULT 'PLANNED',
-        due_date TIMESTAMP,
+        dueDate TIMESTAMP,
         tags TEXT[] DEFAULT '{}',
         color TEXT,
-        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW(),
-        completed_at TIMESTAMP
+        userId TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        createdAt TIMESTAMP DEFAULT NOW(),
+        updatedAt TIMESTAMP DEFAULT NOW(),
+        completedAt TIMESTAMP
       )
     `);
 
@@ -43,9 +43,9 @@ export async function ensureDatabaseInitialized() {
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
         title TEXT NOT NULL,
         completed BOOLEAN DEFAULT FALSE,
-        task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
+        taskId TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+        createdAt TIMESTAMP DEFAULT NOW(),
+        updatedAt TIMESTAMP DEFAULT NOW()
       )
     `);
 
@@ -54,24 +54,53 @@ export async function ensureDatabaseInitialized() {
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
         duration INTEGER NOT NULL,
         completed BOOLEAN DEFAULT FALSE,
-        task_id TEXT REFERENCES tasks(id) ON DELETE SET NULL,
-        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        started_at TIMESTAMP DEFAULT NOW(),
-        created_at TIMESTAMP DEFAULT NOW()
+        taskId TEXT REFERENCES tasks(id) ON DELETE SET NULL,
+        userId TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        startedAt TIMESTAMP DEFAULT NOW(),
+        createdAt TIMESTAMP DEFAULT NOW()
       )
     `);
 
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS daily_reports (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
-        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        userId TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         date DATE NOT NULL,
-        tasks_created INTEGER DEFAULT 0,
-        tasks_completed INTEGER DEFAULT 0,
-        focus_minutes INTEGER DEFAULT 0,
-        created_at TIMESTAMP DEFAULT NOW(),
-        UNIQUE(user_id, date)
+        tasksCreated INTEGER DEFAULT 0,
+        tasksCompleted INTEGER DEFAULT 0,
+        focusMinutes INTEGER DEFAULT 0,
+        createdAt TIMESTAMP DEFAULT NOW(),
+        UNIQUE(userId, date)
       )
+    `);
+
+    // Создаём индексы
+    await prisma.$executeRawUnsafe(`
+      CREATE INDEX IF NOT EXISTS idx_tasks_user_status ON tasks(userId, status)
+    `);
+
+    await prisma.$executeRawUnsafe(`
+      CREATE INDEX IF NOT EXISTS idx_tasks_user_dueDate ON tasks(userId, dueDate)
+    `);
+
+    await prisma.$executeRawUnsafe(`
+      CREATE INDEX IF NOT EXISTS idx_tasks_user_priority ON tasks(userId, priority)
+    `);
+
+    await prisma.$executeRawUnsafe(`
+      CREATE INDEX IF NOT EXISTS idx_tasks_user_createdAt ON tasks(userId, createdAt)
+    `);
+
+    await prisma.$executeRawUnsafe(`
+      CREATE INDEX IF NOT EXISTS idx_focus_sessions_user ON focus_sessions(userId, createdAt)
+    `);
+
+    await prisma.$executeRawUnsafe(`
+      CREATE INDEX IF NOT EXISTS idx_focus_sessions_task ON focus_sessions(taskId)
+    `);
+
+    await prisma.$executeRawUnsafe(`
+      CREATE INDEX IF NOT EXISTS idx_daily_reports_user ON daily_reports(userId, date)
     `);
 
     initialized = true;
