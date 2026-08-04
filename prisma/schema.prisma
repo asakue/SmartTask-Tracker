@@ -26,8 +26,8 @@ model User {
   password      String
   role          String    @default("USER")
   avatar        String?
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   tasks         Task[]
   focusSessions FocusSession[]
@@ -42,13 +42,13 @@ model Task {
   description String    @default("")
   priority    Priority  @default(MEDIUM)
   status      Status    @default(PLANNED)
-  dueDate     DateTime? @map("due_date")
+  dueDate     DateTime?
   tags        String[]  @default([])
   color       String?
-  userId      String    @map("user_id")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  completedAt DateTime? @map("completed_at")
+  userId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
 
   user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   subtasks Subtask[]

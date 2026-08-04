@@ -85,28 +85,11 @@ export async function GET(request: Request) {
       )
     `);
 
-    // Индексы
-    await prisma.$executeRawUnsafe(`
-      CREATE INDEX idx_tasks_user_status ON tasks(userId, status)
-    `);
-    await prisma.$executeRawUnsafe(`
-      CREATE INDEX idx_tasks_user_dueDate ON tasks(userId, dueDate)
-    `);
-    await prisma.$executeRawUnsafe(`
-      CREATE INDEX idx_tasks_user_priority ON tasks(userId, priority)
-    `);
-    await prisma.$executeRawUnsafe(`
-      CREATE INDEX idx_tasks_user_createdAt ON tasks(userId, createdAt)
-    `);
-    await prisma.$executeRawUnsafe(`
-      CREATE INDEX idx_focus_sessions_user ON focus_sessions(userId, createdAt)
-    `);
-    await prisma.$executeRawUnsafe(`
-      CREATE INDEX idx_focus_sessions_task ON focus_sessions(taskId)
-    `);
-    await prisma.$executeRawUnsafe(`
-      CREATE INDEX idx_daily_reports_user ON daily_reports(userId, date)
-    `);
+    await prisma.$executeRawUnsafe(`CREATE INDEX idx_tasks_user_status ON tasks(userId, status)`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX idx_tasks_user_dueDate ON tasks(userId, dueDate)`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX idx_tasks_user_priority ON tasks(userId, priority)`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX idx_focus_sessions_user ON focus_sessions(userId, createdAt)`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX idx_daily_reports_user ON daily_reports(userId, date)`);
 
     console.log("[DB INIT] All tables recreated successfully");
 

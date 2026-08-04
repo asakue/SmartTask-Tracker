@@ -1,15 +1,19 @@
 import { prisma } from "@/lib/prisma";
 
-// Флаг для предотвращения многократного создания таблиц в одной сессии
 let initialized = false;
 
 export async function ensureDatabaseInitialized() {
   if (initialized) return;
   
   try {
-    // Создаём таблицы один раз
+    await prisma.$executeRawUnsafe(`DROP TABLE IF EXISTS daily_reports CASCADE`);
+    await prisma.$executeRawUnsafe(`DROP TABLE IF EXISTS focus_sessions CASCADE`);
+    await prisma.$executeRawUnsafe(`DROP TABLE IF EXISTS subtasks CASCADE`);
+    await prisma.$executeRawUnsafe(`DROP TABLE IF EXISTS tasks CASCADE`);
+    await prisma.$executeRawUnsafe(`DROP TABLE IF EXISTS users CASCADE`);
+
     await prisma.$executeRawUnsafe(`
-      CREATE TABLE IF NOT EXISTS users (
+      CREATE TABLE users (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
         email TEXT UNIQUE NOT NULL,
         name TEXT NOT NULL,
@@ -22,7 +26,7 @@ export async function ensureDatabaseInitialized() {
     `);
 
     await prisma.$executeRawUnsafe(`
-      CREATE TABLE IF NOT EXISTS tasks (
+      CREATE TABLE tasks (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
         title TEXT NOT NULL,
         description TEXT DEFAULT '',
@@ -39,7 +43,7 @@ export async function ensureDatabaseInitialized() {
     `);
 
     await prisma.$executeRawUnsafe(`
-      CREATE TABLE IF NOT EXISTS subtasks (
+      CREATE TABLE subtasks (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
         title TEXT NOT NULL,
         completed BOOLEAN DEFAULT FALSE,
@@ -50,7 +54,7 @@ export async function ensureDatabaseInitialized() {
     `);
 
     await prisma.$executeRawUnsafe(`
-      CREATE TABLE IF NOT EXISTS focus_sessions (
+      CREATE TABLE focus_sessions (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
         duration INTEGER NOT NULL,
         completed BOOLEAN DEFAULT FALSE,
@@ -62,7 +66,7 @@ export async function ensureDatabaseInitialized() {
     `);
 
     await prisma.$executeRawUnsafe(`
-      CREATE TABLE IF NOT EXISTS daily_reports (
+      CREATE TABLE daily_reports (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
         userId TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         date DATE NOT NULL,
@@ -74,40 +78,16 @@ export async function ensureDatabaseInitialized() {
       )
     `);
 
-    // Создаём индексы
-    await prisma.$executeRawUnsafe(`
-      CREATE INDEX IF NOT EXISTS idx_tasks_user_status ON tasks(userId, status)
-    `);
-
-    await prisma.$executeRawUnsafe(`
-      CREATE INDEX IF NOT EXISTS idx_tasks_user_dueDate ON tasks(userId, dueDate)
-    `);
-
-    await prisma.$executeRawUnsafe(`
-      CREATE INDEX IF NOT EXISTS idx_tasks_user_priority ON tasks(userId, priority)
-    `);
-
-    await prisma.$executeRawUnsafe(`
-      CREATE INDEX IF NOT EXISTS idx_tasks_user_createdAt ON tasks(userId, createdAt)
-    `);
-
-    await prisma.$executeRawUnsafe(`
-      CREATE INDEX IF NOT EXISTS idx_focus_sessions_user ON focus_sessions(userId, createdAt)
-    `);
-
-    await prisma.$executeRawUnsafe(`
-      CREATE INDEX IF NOT EXISTS idx_focus_sessions_task ON focus_sessions(taskId)
-    `);
-
-    await prisma.$executeRawUnsafe(`
-      CREATE INDEX IF NOT EXISTS idx_daily_reports_user ON daily_reports(userId, date)
-    `);
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_tasks_user_status ON tasks(userId, status)`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_tasks_user_dueDate ON tasks(userId, dueDate)`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_tasks_user_priority ON tasks(userId, priority)`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_focus_sessions_user ON focus_sessions(userId, createdAt)`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_daily_reports_user ON daily_reports(userId, date)`);
 
     initialized = true;
     console.log("[DB INIT] Tables created successfully");
   } catch (error) {
-    console.error("[DB INIT] Error creating tables:", error);
-    // Если таблицы уже существуют, просто продолжаем работу
+    console.error("[DB INIT] Error:", error);
     initialized = true;
   }
 }
