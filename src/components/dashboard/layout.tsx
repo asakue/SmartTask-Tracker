@@ -36,22 +36,42 @@ const navigation = [
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, hasHydrated, logout } = useAuthStore();
+  const { user, hasHydrated, logout, fetchUser } = useAuthStore();
   const { theme, setTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
-    if (hasHydrated && !user) {
+    if (!hasHydrated) return;
+    
+    setCheckingAuth(false);
+    
+    if (!user) {
       router.push("/login");
     }
   }, [user, hasHydrated, router]);
 
-  if (!hasHydrated || !user) {
+  // Проверяем авторизацию при загрузке
+  useEffect(() => {
+    if (hasHydrated && user) {
+      fetchUser().catch(() => {
+        // Если токен невалиден, выходим
+        logout();
+        router.push("/login");
+      });
+    }
+  }, [hasHydrated, user, fetchUser, router, logout]);
+
+  if (checkingAuth || !hasHydrated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
       </div>
     );
+  }
+
+  if (!user) {
+    return null; // Редирект уже запущен
   }
 
   const handleLogout = async () => {
