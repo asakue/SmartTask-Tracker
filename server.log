@@ -1,0 +1,15 @@
+   ▲ Next.js 15.5.22
+   - Local:        http://localhost:3000
+   - Network:      http://10.185.226.17:3000
+   - Environments: .env
+   - Experiments (use with caution):
+     · serverActions
+
+ ✓ Starting...
+ ✓ Ready in 2.2s
+ ○ Compiling / ...
+ ✓ Compiled / in 3s (624 modules)
+ GET / 307 in 3859ms
+ ✓ Compiled in 695ms (241 modules)
+
+C:\Users\gurzi\Desktop\projects\project 3>
