@@ -24,25 +24,34 @@ export default function LoginForm({ className }: LoginFormProps) {
     e.preventDefault();
     setError("");
 
+    console.log("[FORM] Submitting form...", { showRegister, email });
+
     try {
       if (showRegister) {
         if (!name.trim()) {
           setError("Введите ваше имя");
           return;
         }
+        console.log("[FORM] Calling register");
         await register({ email, password, name });
+        console.log("[FORM] Register completed");
         toast.success("Аккаунт создан! Добро пожаловать!");
         setTimeout(() => {
+          console.log("[FORM] Redirecting to /dashboard");
           router.push("/dashboard");
         }, 500);
       } else {
+        console.log("[FORM] Calling login");
         await login({ email, password });
+        console.log("[FORM] Login completed");
         toast.success("Вы вошли в систему!");
         setTimeout(() => {
+          console.log("[FORM] Redirecting to /dashboard");
           router.push("/dashboard");
         }, 500);
       }
     } catch (err: any) {
+      console.error("[FORM] Error:", err);
       setError(err.message || "Произошла ошибка");
       toast.error(err.message || "Произошла ошибка");
     }

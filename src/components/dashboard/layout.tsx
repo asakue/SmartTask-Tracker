@@ -44,9 +44,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   useEffect(() => {
     if (!hasHydrated) return;
     
+    console.log("[DASHBOARD] hasHydrated:", hasHydrated, "user:", user);
     setCheckingAuth(false);
     
     if (!user) {
+      console.log("[DASHBOARD] No user, redirecting to /login");
       router.push("/login");
     }
   }, [user, hasHydrated, router]);
@@ -54,8 +56,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // Проверяем авторизацию при загрузке
   useEffect(() => {
     if (hasHydrated && user) {
+      console.log("[DASHBOARD] User exists, fetching user");
       fetchUser().catch(() => {
         // Если токен невалиден, выходим
+        console.log("[DASHBOARD] fetchUser failed, logging out");
         logout();
         router.push("/login");
       });
