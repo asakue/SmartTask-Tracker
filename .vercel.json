@@ -6,23 +6,6 @@
       "use": "@vercel/next"
     }
   ],
-  "env": {
-    "DATABASE_URL": {
-      "target": "all",
-      "type": "encrypted"
-    },
-    "JWT_SECRET": {
-      "target": "all",
-      "type": "secret"
-    },
-    "JWT_EXPIRES_IN": {
-      "target": "all",
-      "value": "7d"
-    },
-    "NEXT_PUBLIC_APP_URL": {
-      "target": "all"
-    }
-  },
   "build": {
     "env": {
       "PRISMA_GENERATE_ON_BUILD": "true"
