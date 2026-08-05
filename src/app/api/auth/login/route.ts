@@ -2,13 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { comparePassword } from "@/lib/bcrypt";
 import { signToken } from "@/lib/jwt";
-import { ensureDatabaseInitialized } from "@/lib/db-init";
 
 export async function POST(req: NextRequest) {
   try {
-    // Инициализируем базу данных (создаем таблицы если нет)
-    await ensureDatabaseInitialized();
-
     const body = await req.json();
     const { email, password } = body;
 
